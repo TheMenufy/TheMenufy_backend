@@ -849,11 +849,15 @@ return res.status(200).json({ message: 'Un e-mail a été envoyé', user: utilis
 
   // -------------- other users operations (MOBILE)-----------------------
   getUser: async (req, res) => {
+
     try {
-     
+     const test =req.headers.authorization;
       const tokenLogin = req.cookies.tokenLogin;
-      let decodeTokenLogin = jwt_decode(tokenLogin);
+
+      let decodeTokenLogin = jwt_decode(test);
+     ;
       let idUser = decodeTokenLogin.id;
+   
       if (!idUser) {
         return res.status(400).json({ message: "Invalid token" });
       }
@@ -883,7 +887,7 @@ return res.status(200).json({ message: 'Un e-mail a été envoyé', user: utilis
         "address": req.body.address,
         "phone": req.body.phone
       };
-  
+  console.log(req.file.filename)
       if (req.file) {
         // Update the image if a new image is uploaded
         userUpdate.image = req.file.filename;
@@ -917,13 +921,16 @@ return res.status(200).json({ message: 'Un e-mail a été envoyé', user: utilis
   updateUser: async (req, res) => {
     try {
       const tokenProfile = req.cookies.tokenLogin;
-      let decodeTokenLogin = jwt_decode(tokenProfile);
+      const test =req.headers.authorization;
+      console.log(req.body.firstName)
+      let decodeTokenLogin = jwt_decode(test);
       let idUser = decodeTokenLogin.id;
+
 
       User.updateOne(
         { "_id": idUser },
         { $set: { "firstName": req.body.firstName, "lastName": req.body.lastName, "address": req.body.address, "birthday": req.body.birthday, "phone": req.body.phone, 'activate': req.body.activate } }
-
+     
       ).then(() => {
         res.json({ message: "updated" });
       })
@@ -982,7 +989,6 @@ return res.status(200).json({ message: 'Un e-mail a été envoyé', user: utilis
    updateUserweb : async (req, res) => {
     try {
       const idUser = req.params.id; // Get user ID from URL parameters
-  
       User.updateOne(
         { "_id": idUser },
         { $set: { "firstName": req.body.firstName, "lastName": req.body.lastName, "address": req.body.address, "birthday": req.body.birthday, "phone": req.body.phone, 'activate': req.body.activate } }
@@ -999,9 +1005,10 @@ return res.status(200).json({ message: 'Un e-mail a été envoyé', user: utilis
   },
   
   updateUserAdmin: async (req, res) => {
+  
     try {
       const userId = req.params.userId;
-  
+
       // Update user information
       const userUpdate = {
         "userName": req.body.userName,
@@ -1009,21 +1016,24 @@ return res.status(200).json({ message: 'Un e-mail a été envoyé', user: utilis
         "address": req.body.address,
         "phone": req.body.phone
       };
-  
+
+    console.log(req.body.userName)
+   // console.log("file   "+req.file.filename)
       if (req.file) {
         // Update the image if a new image is uploaded
         userUpdate.image = req.file.filename;
       }
-  
+
       await User.updateOne(
         { "_id": userId },
         { $set: userUpdate }
       );
-  
+
    
   
-      res.json({ message: "Updated user ADMIN." });
+      res.status(200).json({ message: "Updated user ADMIN." });
     } catch (err) {
+      console.log("zaaab")
       return res.status(500).json({ message: "Something went wrong: " + err.message });
     }
   },
@@ -1071,15 +1081,15 @@ return res.status(200).json({ message: 'Un e-mail a été envoyé', user: utilis
 
   updatePassword: async (req, res) => {
     try {
-     
-      const tokenProfile = req.cookies.tokenLogin;
-      const decodeTokenLogin = jwt_decode(tokenProfile);
+ 
+
+      const tokenLogin =req.headers.authorization;
+      // const tokenProfile = req.cookies.tokenLogin;
+      const decodeTokenLogin = jwt_decode(tokenLogin);
       const idUser = decodeTokenLogin.id;
   
-    
+    console.log(req.body)
       const { oldPassword, password, confirmPassword } = req.body;
-  
-      
       if (!oldPassword || !password || !confirmPassword) {
         return res.status(400).json({ message: "Password fields are empty" });
       }
@@ -1104,13 +1114,14 @@ return res.status(200).json({ message: 'Un e-mail a été envoyé', user: utilis
       
       const isSamePassword = bcrypt.compareSync(password, user.password);
       if (isSamePassword) {
+      
         return res.status(400).json({ message: "New password must be different than the current one" });
       }
   
       
       const salt = bcrypt.genSaltSync(10);
       const hashedPassword = bcrypt.hashSync(password, salt);
-  
+
       
       await User.findByIdAndUpdate(idUser, { password: hashedPassword });
       return res.status(200).json({ message: 'Password updated' });

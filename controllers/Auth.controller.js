@@ -159,21 +159,28 @@ const AuthController = {
   },
 
   login: async (req, res) => {
+    console.log(req.body);
     try {
+      
       const { email, password, rememberMe } = req.body;
+    
+    
       if (!email || !password) {
+
         return res.status(400).json({ message: "Not all fields have been entered" });
       }
 
-
+      
       const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
       if (!emailRegex.test(email)) {
         return res.status(400).json({ message: "Invalid email format" });
       }
 
       const user = await User.findOne({ email }); 
+      
       if (!user) {
         console.log('test account with this email :'+email)
+        
         return res.status(400).json({ message: "No account with this email has been found" });
       }
 
@@ -194,11 +201,16 @@ const AuthController = {
 
       res.cookie("tokenLogin", tokenLogin, { httpOnly: true, secure: true });
 
-
+      
       return res.json({
         tokenLogin,
         user: {
           id : user._id,
+          name :user.userName,
+          image :user.image,
+          address :user.address,
+          phone : user.phone,
+          email :user.email,
           role: user.role,
           firstLogin: user.firstLogin,
           activate:user.activate,
@@ -287,8 +299,11 @@ const AuthController = {
       const codeForgot =  decodedTokenForgotPass.activationResendCode || decodedTokenForgotPass.activationCodeForgotPass;
       const email = decodedTokenForgotPass.emailR || decodedTokenForgotPass.email;
    
+
+
       console.log('code ',codeForgot);
       if (tokenForgotPass && code === codeForgot) {
+
 
         User.findOne({ email }).then(async (user) => {
           if (!user) {
@@ -354,6 +369,7 @@ const AuthController = {
         httpOnly: true,
         overwrite : true
       });
+  
       res.json({ message: "Logged out" });
     } catch (err) {
       return res.status(500).json({ message: "Logout failed" + err.message });
